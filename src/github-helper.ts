@@ -27,6 +27,8 @@ export interface Inputs {
   allowUserToSpecifyBranchViaLabel: string
   labelPatternRequirement: string
   userBranchPrefix: string
+  titlePrefix?: string
+  body?: string
 }
 
 export async function createPullRequest(
@@ -39,14 +41,18 @@ export async function createPullRequest(
     const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/')
 
     // Get PR title
-    const title =
+    let title =
       github.context.payload &&
       github.context.payload.pull_request &&
       (github.context.payload.pull_request.title as unknown as string)
     core.info(`Using title '${title ?? ''}'`)
+    
+    if (inputs.titlePrefix != null) {
+      title = inputs.titlePrefix + " " + title;
+    }
 
     // Get PR body
-    const body =
+    const body = inputs.body ? inputs.body : 
       github.context.payload &&
       github.context.payload.pull_request &&
       (github.context.payload.pull_request.body as unknown as string)
