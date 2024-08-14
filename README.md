@@ -2,11 +2,11 @@
   <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
 </p>
 
-## Fork of this action: [cherry-pick-action](https://github.com/marketplace/actions/github-cherry-pick-action)
+## Fork of this action: [cherry-pick-action](https://github.com/marketplace/actions/github-cherry-pick-action) && [cherry-pick-action](https://github.com/marketplace/actions/xealth-cherry-picker)
 
 We'd like to acknowledge [cherry-pick-action](https://github.com/marketplace/actions/github-cherry-pick-action) for giving a great foundation for us to build additional functionality. Please check out that action if you think it better suits your needs. 
 
-# Xealth "Manhattan" - A Cherry Pick GitHub Action 🍒 
+# A Cherry Pick GitHub Action 🍒 
 
 Automatically create a cherry pick `pull-request` to user defined `labels` and/or static release branches!
 
@@ -61,82 +61,32 @@ Usage depends on your needs. Please see the following options:
 
 ## 📋 Configuration
 
-Some examples:
-
-### User Defined Labels
-
-```
-on:
-  pull_request:
-    branches:
-      - main
-    types: ["closed", "labeled"]
-
-jobs:
-  cherry_pick_release_v1_0:
-    runs-on: ubuntu-latest
-    name: Xealth Auto Cherry Picker
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Xealth Auto Cherry Pick
-        uses: xealth/cherry-pick-action@v1.0.0
-        with:
-          allowUserToSpecifyBranchViaLabel: 'true'
-          labelPatternRequirement: 'CP v' <--- Every label that starts with "CP v" will be cherry picked
-          userBranchPrefix: 'v' <--- This add a prefix to the branch (if the branch starts with a prefix)
-          labels: |
-            cherry-pick
-          reviewers: |
-            aReviewerUser
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
 ### Basic Configuration
-
-Cherry-picking pull requests merged on main to branch *release-v1.0* in pull requests labeled with **release-v1.0** and to branch *release-v2.0* in pull requests labeled with **release-v2.0**.
 
 ```yml
 on:
   pull_request:
     branches:
       - main
-    types: ["closed"]
+    types: ["labeled"]
 
 jobs:
-  cherry_pick_release_v1_0:
+  cherry_pick_release:
     runs-on: ubuntu-latest
-    name: Cherry pick into release-v1.0
-    if: contains(github.event.pull_request.labels.*.name, 'release-v1.0')
+    name: Cherry pick into selected branch
+    if: 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Cherry pick into release-v1.0
-        uses: xealth/cherry-pick-action@v1.0.0
+      - name: Cherry pick
+        uses: aver1cal/cherry-pick-action@v1.0.0
         with:
-          branch: release-v1.0
-          labels: |
-            cherry-pick
-          reviewers: |
-            aReviewerUser
-  cherry_pick_release_v2_0:
-    runs-on: ubuntu-latest
-    name: Cherry pick into release-v2.0
-    if: contains(github.event.pull_request.labels.*.name, 'release-v2.0')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Cherry pick into release-v2.0
-        uses: xealth/cherry-pick-action@v1.0.0
-        with:
-          branch: release-v2.0
+          allowUserToSpecifyBranchViaLabel: 'true'
+          labelPatternRequirement: 'cherry-pick v' #Every label that starts with "cherry-pick v" will be cherry picked
+          userBranchPrefix: 'v' #This add a prefix to the branch (if the branch starts with a prefix)
+          body: 'Picked from: ${{ github.event.pull_request.html_url }}'
           labels: |
             cherry-pick
           reviewers: |
@@ -162,6 +112,8 @@ If your release branches do not change often, setting up user defined labels mig
 | `assignees` | A comma or newline-separated list of assignees (GitHub usernames). | |
 | `reviewers` | A comma or newline-separated list of reviewers (GitHub usernames) to request a review from. | |
 | `team-reviewers` | A comma or newline-separated list of GitHub teams to request a review from. Note that a `repo` scoped [PAT](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) may be required. | |
+| `body` | Content of cherry-pick PR description. | |
+| `titlePrefix` | Optional prefix in front of the duplicated title in cherry-pick PR. | |
 
 If you'd like users to cherry pick based on label input, see below:
 
