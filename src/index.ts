@@ -8,6 +8,7 @@ import {
   buildBranchesFromLabels
 } from './github-helper'
 import _ from 'lodash'
+import {context} from '@actions/github'
 
 const CHERRYPICK_EMPTY =
   'The previous cherry-pick is now empty, possibly due to conflict resolution.'
@@ -38,7 +39,7 @@ export async function run(): Promise<void> {
     labelPatternRequirement: core.getInput('labelPatternRequirement'),
     userBranchPrefix: core.getInput('userBranchPrefix') || '',
     titlePrefix: core.getInput('titlePrefix') || '',
-    body: core.getInput('body') || '',
+    body: core.getInput('body') || ''
   }
 
   const branchesToCherryPick = findBranchesToCherryPick(inputs)
@@ -142,6 +143,23 @@ async function cherryPickExecution(
     if (result.exitCode !== 0 && !result.stderr.includes(CHERRYPICK_EMPTY)) {
       throw new Error(`Unexpected error: ${result.stderr}`)
     }
+
+    // Get and compare diffs
+    const cherryPickDiff = await getGitDiff()
+    const originalHead = context.payload.pull_request?.head as {
+      sha: string
+    }
+    const originalRef = originalHead?.sha
+    await gitExecution(['checkout', originalRef || ''])
+    const originalDiff = await getGitDiff()
+
+    if (cherryPickDiff !== originalDiff) {
+      throw new Error('Cherry-picked changes do not match original PR changes')
+    }
+
+    // Return to cherry-pick branch
+    await gitExecution(['checkout', prBranch])
+
     core.endGroup()
 
     // Push new branch
@@ -195,6 +213,11 @@ async function gitExecution(params: string[]): Promise<GitOutput> {
   }
 
   return result
+}
+
+async function getGitDiff(): Promise<string> {
+  const result = await gitExecution(['diff', 'HEAD^', 'HEAD'])
+  return result.stdout
 }
 
 class GitOutput {
