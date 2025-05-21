@@ -154,7 +154,7 @@ async function cherryPickExecution(
     const originalDiff = await getGitDiff()
 
     if (cherryPickDiff !== originalDiff) {
-      throw new Error('Cherry-picked changes do not match original PR changes')
+      inputs.labels.push('unequal')
     }
 
     // Return to cherry-pick branch
