@@ -143,20 +143,25 @@ async function cherryPickExecution(
     if (result.exitCode !== 0 && !result.stderr.includes(CHERRYPICK_EMPTY)) {
       throw new Error(`Unexpected error: ${result.stderr}`)
     }
+    core.endGroup()
 
-    // Get and compare diffs
+    // Compare diffs
+    core.startGroup('Comparing diffs')
+    // Get cherry-pick diff
     const cherryPickDiff = await getGitDiff()
-    const originalHead = context.payload.pull_request?.head as {
-      sha: string
-    }
-    const originalRef = originalHead?.sha
-    await gitExecution(['checkout', originalRef || ''])
-    const originalDiff = await getGitDiff()
-
     core.info('Cherry-picked diff:')
     core.info('----------------------------------------')
     core.info(cherryPickDiff)
     core.info('----------------------------------------')
+
+    // Get original diff
+    const originalHead = context.payload.pull_request?.head as {
+      sha: string
+    }
+    const originalRef = originalHead?.sha
+
+    await gitExecution(['checkout', originalRef])
+    const originalDiff = await getGitDiff()
 
     core.info('Original diff:')
     core.info('----------------------------------------')
@@ -164,12 +169,14 @@ async function cherryPickExecution(
     core.info('----------------------------------------')
 
     if (cherryPickDiff !== originalDiff) {
+      core.info('Diffs are not identical!')
       inputs.labels.push('non-identical')
+    } else {
+      core.info('Diffs are identical')
     }
 
     // Return to cherry-pick branch
     await gitExecution(['checkout', prBranch])
-
     core.endGroup()
 
     // Push new branch
