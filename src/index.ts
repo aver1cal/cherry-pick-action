@@ -153,6 +153,16 @@ async function cherryPickExecution(
     await gitExecution(['checkout', originalRef || ''])
     const originalDiff = await getGitDiff()
 
+    core.info('Cherry-picked diff:')
+    core.info('----------------------------------------')
+    core.info(cherryPickDiff)
+    core.info('----------------------------------------')
+
+    core.info('Original diff:')
+    core.info('----------------------------------------')
+    core.info(originalDiff)
+    core.info('----------------------------------------')
+
     if (cherryPickDiff !== originalDiff) {
       inputs.labels.push('non-identical')
     }
