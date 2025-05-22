@@ -154,7 +154,7 @@ async function cherryPickExecution(
     const originalDiff = await getGitDiff()
 
     if (cherryPickDiff !== originalDiff) {
-      inputs.labels.push('unequal')
+      inputs.labels.push('non-identical')
     }
 
     // Return to cherry-pick branch
