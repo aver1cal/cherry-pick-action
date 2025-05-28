@@ -47938,6 +47938,10 @@ async function cherryPickExecution(inputs, branch) {
         // Get original diff
         const originalHead = github_1.context.payload.pull_request?.head;
         const originalRef = originalHead?.sha;
+        if (!originalRef) {
+            throw new Error('Could not determine original commit SHA');
+        }
+        await gitExecution(['fetch', 'origin', originalRef]);
         await gitExecution(['checkout', originalRef]);
         const originalDiff = await getGitDiff();
         core.info('Original diff:');

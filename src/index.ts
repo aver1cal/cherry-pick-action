@@ -160,6 +160,11 @@ async function cherryPickExecution(
     }
     const originalRef = originalHead?.sha
 
+    if (!originalRef) {
+      throw new Error('Could not determine original commit SHA')
+    }
+
+    await gitExecution(['fetch', 'origin', originalRef])
     await gitExecution(['checkout', originalRef])
     const originalDiff = await getGitDiff()
 
