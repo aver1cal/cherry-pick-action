@@ -234,7 +234,13 @@ async function gitExecution(params: string[]): Promise<GitOutput> {
 }
 
 async function getGitDiff(): Promise<string> {
-  const result = await gitExecution(['diff', 'HEAD^', 'HEAD'])
+  const result = await gitExecution([
+    'diff',
+    '--unified=0',
+    '--no-prefix',
+    'HEAD^',
+    'HEAD'
+  ])
   return result.stdout
 }
 

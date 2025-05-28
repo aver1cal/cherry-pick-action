@@ -48004,7 +48004,13 @@ async function gitExecution(params) {
     return result;
 }
 async function getGitDiff() {
-    const result = await gitExecution(['diff', 'HEAD^', 'HEAD']);
+    const result = await gitExecution([
+        'diff',
+        '--unified=0',
+        '--no-prefix',
+        'HEAD^',
+        'HEAD'
+    ]);
     return result.stdout;
 }
 class GitOutput {
