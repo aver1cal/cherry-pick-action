@@ -47926,6 +47926,7 @@ async function cherryPickExecution(inputs, branch) {
             'cherry-pick',
             '-m',
             '1',
+            '--strategy=recursive',
             `${githubSha}`
         ]);
         if (result.exitCode !== 0 && !result.stderr.includes(CHERRYPICK_EMPTY)) {
