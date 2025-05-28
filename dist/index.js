@@ -47922,12 +47922,7 @@ async function cherryPickExecution(inputs, branch) {
         core.endGroup();
         // Cherry pick
         core.startGroup('Cherry picking');
-        const result = await gitExecution([
-            'cherry-pick',
-            '-m',
-            '1',
-            `${githubSha}`
-        ]);
+        const result = await gitExecution(['cherry-pick', `${githubSha}`]);
         if (result.exitCode !== 0 && !result.stderr.includes(CHERRYPICK_EMPTY)) {
             throw new Error(`Unexpected error: ${result.stderr}`);
         }
@@ -48004,7 +47999,13 @@ async function gitExecution(params) {
     return result;
 }
 async function getGitDiff() {
-    const result = await gitExecution(['diff', 'HEAD^', 'HEAD']);
+    const result = await gitExecution([
+        'diff',
+        '--unified=0',
+        '--no-prefix',
+        'HEAD^',
+        'HEAD'
+    ]);
     return result.stdout;
 }
 class GitOutput {
