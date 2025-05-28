@@ -48006,7 +48006,10 @@ async function getGitDiff() {
         'HEAD^',
         'HEAD'
     ]);
-    return result.stdout;
+    return result.stdout
+        .split('\n')
+        .filter(line => line.startsWith('+') || line.startsWith('-'))
+        .join('\n');
 }
 class GitOutput {
     constructor() {
