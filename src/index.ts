@@ -143,7 +143,6 @@ async function cherryPickExecution(
       'cherry-pick',
       '-m',
       '1',
-      '--strategy=recursive',
       `${githubSha}`
     ])
     if (result.exitCode !== 0 && !result.stderr.includes(CHERRYPICK_EMPTY)) {
@@ -151,14 +150,9 @@ async function cherryPickExecution(
     }
     core.endGroup()
 
-    // Compare diffs
     core.startGroup('Comparing diffs')
     // Get cherry-pick diff
     const cherryPickDiff = await getGitDiff()
-    core.info('Cherry-picked diff:')
-    core.info('----------------------------------------')
-    core.info(cherryPickDiff)
-    core.info('----------------------------------------')
 
     // Get original diff
     const originalHead = context.payload.pull_request?.head as {
@@ -174,13 +168,9 @@ async function cherryPickExecution(
     await gitExecution(['checkout', originalRef])
     const originalDiff = await getGitDiff()
 
-    core.info('Original diff:')
-    core.info('----------------------------------------')
-    core.info(originalDiff)
-    core.info('----------------------------------------')
-
+    // Compare diffs
     if (cherryPickDiff !== originalDiff) {
-      core.info('Diffs are not identical!')
+      core.info('Diffs are not identical, applying label')
       inputs.labels.push('non-identical')
     } else {
       core.info('Diffs are identical')
