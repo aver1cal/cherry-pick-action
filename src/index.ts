@@ -139,27 +139,45 @@ async function cherryPickExecution(
 
     // Cherry pick
     core.startGroup('Cherry picking')
-    const result = await gitExecution(['cherry-pick', `${githubSha}`])
+    const result = await gitExecution([
+      'cherry-pick',
+      '-m',
+      '1',
+      `${githubSha}`
+    ])
     if (result.exitCode !== 0 && !result.stderr.includes(CHERRYPICK_EMPTY)) {
       throw new Error(`Unexpected error: ${result.stderr}`)
     }
+    core.endGroup()
 
-    // Get and compare diffs
+    core.startGroup('Comparing diffs')
+    // Get cherry-pick diff
     const cherryPickDiff = await getGitDiff()
+
+    // Get original diff
     const originalHead = context.payload.pull_request?.head as {
       sha: string
     }
     const originalRef = originalHead?.sha
-    await gitExecution(['checkout', originalRef || ''])
+
+    if (!originalRef) {
+      throw new Error('Could not determine original commit SHA')
+    }
+
+    await gitExecution(['fetch', 'origin', originalRef])
+    await gitExecution(['checkout', originalRef])
     const originalDiff = await getGitDiff()
 
+    // Compare diffs
     if (cherryPickDiff !== originalDiff) {
+      core.info('Diffs are not identical, applying label')
       inputs.labels.push('non-identical')
+    } else {
+      core.info('Diffs are identical')
     }
 
     // Return to cherry-pick branch
     await gitExecution(['checkout', prBranch])
-
     core.endGroup()
 
     // Push new branch

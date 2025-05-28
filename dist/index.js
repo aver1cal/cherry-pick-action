@@ -47828,6 +47828,7 @@ const exec = __importStar(__nccwpck_require__(1514));
 const utils = __importStar(__nccwpck_require__(1314));
 const github_helper_1 = __nccwpck_require__(5366);
 const lodash_1 = __importDefault(__nccwpck_require__(250));
+const github_1 = __nccwpck_require__(5438);
 const CHERRYPICK_EMPTY = 'The previous cherry-pick is now empty, possibly due to conflict resolution.';
 async function run() {
     const inputs = {
@@ -47843,7 +47844,7 @@ async function run() {
         labelPatternRequirement: core.getInput('labelPatternRequirement'),
         userBranchPrefix: core.getInput('userBranchPrefix') || '',
         titlePrefix: core.getInput('titlePrefix') || '',
-        body: core.getInput('body') || '',
+        body: core.getInput('body') || ''
     };
     const branchesToCherryPick = findBranchesToCherryPick(inputs);
     if (!branchesToCherryPick) {
@@ -47925,13 +47926,34 @@ async function cherryPickExecution(inputs, branch) {
             'cherry-pick',
             '-m',
             '1',
-            '--strategy=recursive',
-            '--strategy-option=theirs',
             `${githubSha}`
         ]);
         if (result.exitCode !== 0 && !result.stderr.includes(CHERRYPICK_EMPTY)) {
             throw new Error(`Unexpected error: ${result.stderr}`);
         }
+        core.endGroup();
+        core.startGroup('Comparing diffs');
+        // Get cherry-pick diff
+        const cherryPickDiff = await getGitDiff();
+        // Get original diff
+        const originalHead = github_1.context.payload.pull_request?.head;
+        const originalRef = originalHead?.sha;
+        if (!originalRef) {
+            throw new Error('Could not determine original commit SHA');
+        }
+        await gitExecution(['fetch', 'origin', originalRef]);
+        await gitExecution(['checkout', originalRef]);
+        const originalDiff = await getGitDiff();
+        // Compare diffs
+        if (cherryPickDiff !== originalDiff) {
+            core.info('Diffs are not identical, applying label');
+            inputs.labels.push('non-identical');
+        }
+        else {
+            core.info('Diffs are identical');
+        }
+        // Return to cherry-pick branch
+        await gitExecution(['checkout', prBranch]);
         core.endGroup();
         // Push new branch
         core.startGroup('Push new branch to remote');
@@ -47980,6 +48002,10 @@ async function gitExecution(params) {
         core.info(result.stderr.trim());
     }
     return result;
+}
+async function getGitDiff() {
+    const result = await gitExecution(['diff', 'HEAD^', 'HEAD']);
+    return result.stdout;
 }
 class GitOutput {
     constructor() {
