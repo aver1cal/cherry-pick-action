@@ -169,6 +169,7 @@ async function cherryPickExecution(
       inputs.labels.push('non-identical')
     } else {
       core.info('Diffs are identical')
+      inputs.labels.push('identical')
     }
 
     // Return to cherry-pick branch

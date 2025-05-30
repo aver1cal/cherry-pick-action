@@ -47946,6 +47946,7 @@ async function cherryPickExecution(inputs, branch) {
         }
         else {
             core.info('Diffs are identical');
+            inputs.labels.push('identical');
         }
         // Return to cherry-pick branch
         await gitExecution(['checkout', prBranch]);
