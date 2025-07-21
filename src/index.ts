@@ -234,9 +234,11 @@ async function getGitDiff(): Promise<string> {
     'diff',
     '--unified=0',
     '--no-prefix',
+    '--no-index-info',
     'HEAD^',
     'HEAD'
   ])
+
   return result.stdout
     .split('\n')
     .filter(line => line.startsWith('+') || line.startsWith('-'))
