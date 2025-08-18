@@ -234,7 +234,6 @@ async function getGitDiff(): Promise<string> {
     'diff',
     '--unified=0',
     '--no-prefix',
-    '--no-index-info',
     'HEAD^',
     'HEAD'
   ])
