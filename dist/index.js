@@ -48012,7 +48012,6 @@ async function getGitDiff() {
         'diff',
         '--unified=0',
         '--no-prefix',
-        '--no-index-info',
         'HEAD^',
         'HEAD'
     ]);
