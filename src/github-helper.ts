@@ -46,16 +46,17 @@ export async function createPullRequest(
       github.context.payload.pull_request &&
       (github.context.payload.pull_request.title as unknown as string)
     core.info(`Using title '${title ?? ''}'`)
-    
+
     if (inputs.titlePrefix != null) {
-      title = inputs.titlePrefix + " " + title;
+      title = `${inputs.titlePrefix} ${title}`
     }
 
     // Get PR body
-    const body = inputs.body ? inputs.body : 
-      github.context.payload &&
-      github.context.payload.pull_request &&
-      (github.context.payload.pull_request.body as unknown as string)
+    const body = inputs.body
+      ? inputs.body
+      : github.context.payload &&
+        github.context.payload.pull_request &&
+        (github.context.payload.pull_request.body as unknown as string)
     core.info(`Using body '${body ?? ''}'`)
 
     // Create PR

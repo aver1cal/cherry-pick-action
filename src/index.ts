@@ -8,7 +8,6 @@ import {
   buildBranchesFromLabels
 } from './github-helper'
 import _ from 'lodash'
-import {context} from '@actions/github'
 
 const CHERRYPICK_EMPTY =
   'The previous cherry-pick is now empty, possibly due to conflict resolution.'
@@ -147,21 +146,10 @@ async function cherryPickExecution(
 
     core.startGroup('Comparing diffs')
     // Get cherry-pick diff
-    const cherryPickDiff = await getGitDiff()
+    const cherryPickDiff = await getGitDiffForCommit('HEAD')
 
-    // Get original diff
-    const originalHead = context.payload.pull_request?.head as {
-      sha: string
-    }
-    const originalRef = originalHead?.sha
-
-    if (!originalRef) {
-      throw new Error('Could not determine original commit SHA')
-    }
-
-    await gitExecution(['fetch', 'origin', originalRef])
-    await gitExecution(['checkout', originalRef])
-    const originalDiff = await getGitDiff()
+    // Compare against the exact commit that was cherry-picked.
+    const originalDiff = await getGitDiffForCommit(githubSha)
 
     // Compare diffs
     if (cherryPickDiff !== originalDiff) {
@@ -229,18 +217,24 @@ async function gitExecution(params: string[]): Promise<GitOutput> {
   return result
 }
 
-async function getGitDiff(): Promise<string> {
+async function getGitDiffForCommit(commitRef: string): Promise<string> {
   const result = await gitExecution([
-    'diff',
+    'show',
     '--unified=0',
     '--no-prefix',
-    'HEAD^',
-    'HEAD'
+    '--format=',
+    '--no-color',
+    commitRef
   ])
 
   return result.stdout
     .split('\n')
-    .filter(line => line.startsWith('+') || line.startsWith('-'))
+    .filter(
+      line =>
+        (line.startsWith('+') || line.startsWith('-')) &&
+        !line.startsWith('+++') &&
+        !line.startsWith('---')
+    )
     .join('\n')
 }
 
