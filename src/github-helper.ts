@@ -47,7 +47,7 @@ export async function createPullRequest(
       (github.context.payload.pull_request.title as unknown as string)
     core.info(`Using title '${title ?? ''}'`)
 
-    if (inputs.titlePrefix != null) {
+    if (inputs.titlePrefix) {
       title = `${inputs.titlePrefix} ${title}`
     }
 
