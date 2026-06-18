@@ -48,8 +48,11 @@ export async function createPullRequest(
     core.info(`Using title '${title ?? ''}'`)
 
     if (inputs.titlePrefix) {
-      title = `${inputs.titlePrefix} ${title}`
+      title = `${inputs.titlePrefix} ${title ?? ''}`
     }
+
+    // Sanitize title
+    title = title?.replace(/^[\s\W]+|[\s\W]+$/gu, '') ?? ''
 
     // Get PR body
     const body = inputs.body
