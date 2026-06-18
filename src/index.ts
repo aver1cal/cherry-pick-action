@@ -145,14 +145,10 @@ async function cherryPickExecution(
     core.endGroup()
 
     core.startGroup('Comparing diffs')
-    // Get cherry-pick diff
-    const cherryPickDiff = await getGitDiffForCommit('HEAD')
+    const cherryPickPatch = await getCommitPatch('HEAD')
+    const originalPatch = await getCommitPatch(githubSha)
 
-    // Compare against the exact commit that was cherry-picked.
-    const originalDiff = await getGitDiffForCommit(githubSha)
-
-    // Compare diffs
-    if (cherryPickDiff !== originalDiff) {
+    if (cherryPickPatch !== originalPatch) {
       core.info('Diffs are not identical, applying label')
       inputs.labels.push('non-identical')
     } else {
@@ -160,8 +156,6 @@ async function cherryPickExecution(
       inputs.labels.push('identical')
     }
 
-    // Return to cherry-pick branch
-    await gitExecution(['checkout', prBranch])
     core.endGroup()
 
     // Push new branch
@@ -217,13 +211,13 @@ async function gitExecution(params: string[]): Promise<GitOutput> {
   return result
 }
 
-async function getGitDiffForCommit(commitRef: string): Promise<string> {
+async function getCommitPatch(commitRef: string): Promise<string> {
   const result = await gitExecution([
-    'show',
+    'diff',
     '--unified=0',
     '--no-prefix',
-    '--format=',
     '--no-color',
+    `${commitRef}^`,
     commitRef
   ])
 
